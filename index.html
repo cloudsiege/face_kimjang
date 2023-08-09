@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>얼굴 인식</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" >    
+    <link rel="stylesheet" href="https://cdn.biqapp.com/face/style/face-detection.css">
+    <style>
+        #webcam {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+        }
+
+        #video-container {
+                position: relative;
+                width: 100%;
+                height: 0;
+                padding-bottom: 56.25%; /* 16:9 비율에 맞춰 설정 */
+                overflow: hidden;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src='js/face-api.min.js'></script>
+    <script type="text/javascript" src="https://unpkg.com/webcam-easy/dist/webcam-easy.min.js"></script>
+</head>
+<body>
+        <main>
+            <div class="container mt-1">
+                <div class="row">
+                    <div class="col-12 col-md-4 col-xl-3 align-top">
+                        <div class="row mb-3">
+                                <div class="col-md-10 col-6 form-control">
+                                        <label class="form-switch">
+                                        <input type="checkbox" id="webcam-switch">
+                                        <i></i> 웹캠 </label>  
+                                        <button id="cameraFlip" class="btn d-none"></button>     
+                                </div> 
+                                <div class="col-md-10 col-6 form-control">
+                                        <label class="form-switch disabled">
+                                        <input type="checkbox" disabled id="detection-switch">
+                                        <i></i> 얼굴 감지 </label>      
+                                </div>   
+                                <div class="col-md-10 col-6 form-control">
+                                        <label class="form-switch disabled">
+                                        <input type="checkbox" disabled id="box-switch">
+                                        <i></i> 경계 상자 </label>      
+                                </div>
+                                <div class="col-md-10 col-6 form-control">
+                                        <label class="form-switch disabled">
+                                        <input type="checkbox" disabled id="landmarks-switch">
+                                        <i></i> 랜드마크 </label>      
+                                </div>
+                   
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-8 col-xl-9 align-top" id="webcam-container">
+                        <div class="loading d-none">
+                                모델 로드중
+                                <div class="spinner-border" role="status">
+                                        <span class="sr-only"></span>
+                                </div>
+                        </div>
+                        
+                        <div id="video-container">
+                                <video id="webcam" autoplay muted playsinline></video>
+                        </div>  
+                        <div id="errorMsg" class="col-12 alert-danger d-none">
+                        카메라 시작 실패 <br>
+                        1. 카메라 액세스 권한을 허용하세요. <br>
+                        2. 내장 브라우저에서 소셜 미디어를 탐색하는 경우 오른쪽 상단/하단 모서리에 있는 ... 또는 브라우저 아이콘을 찾아 사라피(iPhone)/크롬(Android)에서 페이지를 엽니다.
+                        </div>
+                        <ul id="data-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </main>   
+        <script src="js/face-detection.js"></script>
+        <script>
+          const videoContainer = document.getElementById('video-container');
+          function updateDataList(data) {
+                  const dataList = document.getElementById('data-list');
+                  dataList.innerHTML = ''; // 기존 목록 비우기
+
+                  const messages = data.message; // message 배열 가져오기
+
+                  messages.forEach(message => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `Count: ${message.count}, Timestamp: ${message.timestamp}`; // 데이터를 적절하게 표시하도록 수정
+                    dataList.appendChild(listItem);
+                  });
+                }
+                // 서버에서 데이터 가져오기
+                function fetchDataFromServer() {
+                  fetch('https://biqapp.com/api/v1/face/get-data')
+                    .then(response => response.json())
+                    .then(data => {
+                      console.log(data);
+                      updateDataList(data);
+                    })
+                    .catch(error => {
+                      console.error('데이터 가져오기 실패', error);
+                    });
+                }
+
+                setInterval(() => {
+                  fetchDataFromServer();
+                }, 3000);
+
+
+
+        </script>
+</body>
+</html>
