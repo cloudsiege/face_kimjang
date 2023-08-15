@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face API Example</title>
+</head>
+<body>
+    <input type="file" id="imageInput" accept="image/*">
+    <div id="result"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="js/face-api.min.js"></script>
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const resultDiv = document.getElementById('result');
+
+        Promise.all([
+            faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+            faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+            faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
+        ]).then(start);
+
+        async function start() {
+            imageInput.addEventListener('change', async () => {
+                const image = await faceapi.bufferToImage(imageInput.files[0]);
+                resultDiv.innerHTML = 'Detecting...';
+
+                const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors();
+
+                if (detections.length > 0) {
+                    resultDiv.innerHTML = '';
+                    detections.forEach((detection, i) => {
+                        const descriptor = detection.descriptor.join(',');
+                        resultDiv.innerHTML += `Face ${i + 1} Descriptor: ${descriptor}<br>`;
+                    });
+                } else {
+                    resultDiv.innerHTML = 'No faces detected.';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
