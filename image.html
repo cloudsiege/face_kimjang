@@ -3,16 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face API Example</title>
+    <title>Face Landmark Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            max-height: 60vh;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
+    <h1>Face Landmark Detection</h1>
     <input type="file" id="imageInput" accept="image/*">
     <div id="result"></div>
+    <img id="inputImage" src="" alt="Input Image">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="js/face-api.min.js"></script>
     <script>
         const imageInput = document.getElementById('imageInput');
         const resultDiv = document.getElementById('result');
+        const inputImage = document.getElementById('inputImage');
 
         Promise.all([
             faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
@@ -23,6 +46,7 @@
         async function start() {
             imageInput.addEventListener('change', async () => {
                 const image = await faceapi.bufferToImage(imageInput.files[0]);
+                inputImage.src = image.src;
                 resultDiv.innerHTML = 'Detecting...';
 
                 const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors();
@@ -30,8 +54,10 @@
                 if (detections.length > 0) {
                     resultDiv.innerHTML = '';
                     detections.forEach((detection, i) => {
+                        const landmarksText = JSON.stringify(detection.landmarks);
                         const descriptor = detection.descriptor.join(',');
-                        resultDiv.innerHTML += `Face ${i + 1} Descriptor: ${descriptor}<br>`;
+                        resultDiv.innerHTML += `<p>Face ${i + 1} Landmarks: ${landmarksText}</p>`;
+                        resultDiv.innerHTML += `<p>Face ${i + 1} Descriptor: ${descriptor}</p>`;
                     });
                 } else {
                     resultDiv.innerHTML = 'No faces detected.';
