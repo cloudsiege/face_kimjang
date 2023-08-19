@@ -276,7 +276,6 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
     if (distance < bestDistance) {
       // 최적 거리 및 매칭 정보 업데이트
       bestDistance = distance;
-      console.log(bestDistance);
       bestMatch = imageDesc;
     }
   }
