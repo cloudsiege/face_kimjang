@@ -217,6 +217,7 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
         if ($("#name-switch").is(":checked")) {
           const bestMatch = findBestMatch(faces[index].descriptors, imageDescriptors);
             const name = bestMatch? bestMatch.name: "";
+            const affiliation = bestMatch? bestMatch.class: "";
             const textHeight = 14; 
             const textX = box.x + box.width + 5; 
             const textY = box.y + box.height - textHeight;
@@ -224,7 +225,8 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
             // 이름을 바운딩 박스 옆에 표시합니다.
             canvas.getContext('2d').font = '14px Arial';
             canvas.getContext('2d').fillStyle = 'blue';
-            canvas.getContext('2d').fillText(name, textX, textY);
+            canvas.getContext('2d').fillText(name, textX, textY -15);
+            canvas.getContext('2d').fillText(affiliation, textX, textY);
         }
       });
     }
@@ -364,8 +366,3 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
     }
   });
 }
-
-
-
-
-
