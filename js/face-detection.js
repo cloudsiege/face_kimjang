@@ -161,12 +161,24 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
 .fail(function(jqxhr, textStatus, error) {
   console.error('데이터를 불러오는데 문제가 발생하였습니다.');
 });
+
+/**
+ * 얼굴 감지를 시작하는 함수입니다.
+ * 일정 간격으로 얼굴을 감지하고, 감지된 얼굴에 대한 작업 및 데이터 처리를 수행합니다.
+ */
  function startDetection() {
+  // 얼굴 감지를 주기적으로 수행하는 타이머 설정
+  let bestMatch = null;
   faceDetection = setInterval(async () => {
+    // 웹캠을 사용하여 얼굴을 감지합니다.
     const detections = await faceapi.detectAllFaces(webcamElement, new faceapi.TinyFaceDetectorOptions())
       .withFaceLandmarks(true)
       .withFaceDescriptors();
+
+    // 감지된 얼굴 데이터를 화면 크기에 맞게 조절합니다.
     const resizedDetections = faceapi.resizeResults(detections, displaySize);
+
+    // 감지된 얼굴의 랜드마크와 특징을 추출하여 배열로 구성합니다.
     const faces = resizedDetections.map(detection => {
       const landmarks = detection.landmarks;
       const descriptors = detection.descriptor;
@@ -176,6 +188,8 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
         descriptors: descriptors
       };
     });
+
+    // 새로 감지된 얼굴 중 이미 등록되지 않은 얼굴을 필터링하여 신규 얼굴 배열에 추가합니다.
     const newFaces = faces.filter(face => {
       const isCounted = faceData.some(data => {
         if (data.descriptors && face.descriptors) {
@@ -184,13 +198,26 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
         }
         return false;
       });
-      return !isCounted;
+      bestMatch = findBestMatch(face.descriptors, imageDescriptors);
+      return !isCounted; // 이미 등록되지 않은 얼굴만 반환
     });
-    faceData.push(...newFaces);
+
+    // 신규 얼굴 데이터를 기존 얼굴 데이터에 추가합니다.
+    faceData.push(...newFaces.map((newFace, index) => {
+      return {
+        ...newFace,
+        class: bestMatch ? bestMatch.class : "" // 클래스 정보를 포함합니다
+      };
+    }));
+
+    // 캔버스를 초기화하여 이전에 그려진 내용을 지웁니다.
     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+
+    // 체크박스에 따라 얼굴 시각화 및 이름 표시 작업을 수행합니다.
     if ($("#box-switch").is(":checked") || $("#name-switch").is(":checked")) {
       resizedDetections.forEach((detection, index) => {
         const box = detection.detection.box;
+
         if ($("#box-switch").is(":checked")) {
           faceapi.draw.drawDetections(canvas, [detection]);
         }
@@ -201,6 +228,8 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
             const textHeight = 14; 
             const textX = box.x + box.width + 5; 
             const textY = box.y + box.height - textHeight;
+
+            // 이름을 바운딩 박스 옆에 표시합니다.
             canvas.getContext('2d').font = '14px Arial';
             canvas.getContext('2d').fillStyle = 'blue';
             canvas.getContext('2d').fillText(name, textX, textY -15);
@@ -208,18 +237,25 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
         }
       });
     }
+
+    // 얼굴 시각화 및 랜드마크 시각화 작업을 수행합니다.
     if ($("#box-switch").is(":checked")) {
       faceapi.draw.drawDetections(canvas, resizedDetections);
     }
     if ($("#landmarks-switch").is(":checked")) {
       faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
     }
+
+    // 로딩 표시 요소를 숨깁니다.
     if (!$(".loading").hasClass('d-none')) {
       $(".loading").addClass('d-none');
     }
   }, 300);
+
+  // 일정 시간마다 서버로 얼굴 데이터 전송하는 타이머 설정
   setInterval(() => {
     if (faceData.length !== 0) {
+      // 얼굴 데이터를 서버로 전송하고, 전송 후 배열을 초기화합니다.
       sendFaceDataToServer(faceData);
       faceData = [];
     }
