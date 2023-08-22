@@ -78,7 +78,7 @@
                         1. 카메라 액세스 권한을 허용하세요. <br>
                         2. 내장 브라우저에서 소셜 미디어를 탐색하는 경우 오른쪽 상단/하단 모서리에 있는 ... 또는 브라우저 아이콘을 찾아 사라피(iPhone)/크롬(Android)에서 페이지를 엽니다.
                         </div>
-                        <ul id="data-list"></ul>
+                        <ul id="data-list" class="list-group mt-3"></ul>
                     </div>
                 </div>
             </div>
@@ -87,17 +87,49 @@
         <script>
           const videoContainer = document.getElementById('video-container');
           function updateDataList(data) {
-                  const dataList = document.getElementById('data-list');
-                  dataList.innerHTML = ''; // 기존 목록 비우기
+    const dataList = document.getElementById('data-list');
+    dataList.innerHTML = ''; // Clear previous items
 
-                  const messages = data.message; // message 배열 가져오기
+    const messages = data.message;
 
-                  messages.forEach(message => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `Count: ${message.count}, Timestamp: ${message.timestamp}`; // 데이터를 적절하게 표시하도록 수정
-                    dataList.appendChild(listItem);
-                  });
+    // Group recognition data by timestamp and class
+    const groupedData = {};
+    messages.forEach(message => {
+        const timestamp = message.timestamp;
+        if (!groupedData[timestamp]) {
+            groupedData[timestamp] = {};
+        }
+        message.faceData.forEach(item => {
+            const className = item.class;
+            if (className) { // Only consider entries with a class
+                if (!groupedData[timestamp][className]) {
+                    groupedData[timestamp][className] = 0;
                 }
+                groupedData[timestamp][className] += message.count;
+            }
+        });
+    });
+
+    // Display grouped data
+    Object.entries(groupedData).forEach(([timestamp, classCounts]) => {
+        const listGroup = document.createElement('ul');
+        listGroup.className = 'list-group mb-3';
+
+        const timeListItem = document.createElement('li');
+        timeListItem.className = 'list-group-item font-weight-bold';
+        timeListItem.textContent = `시간: ${timestamp}`;
+        listGroup.appendChild(timeListItem);
+
+        Object.entries(classCounts).forEach(([className, count]) => {
+            const classItem = document.createElement('li');
+            classItem.className = 'list-group-item';
+            classItem.textContent = `${className}: ${count}명`;
+            listGroup.appendChild(classItem);
+        });
+
+        dataList.appendChild(listGroup);
+    });
+}
                 // 서버에서 데이터 가져오기
                 function fetchDataFromServer() {
                   fetch('https://biqapp.com/api/v1/face/get-data')
@@ -113,7 +145,7 @@
 
                 setInterval(() => {
                   fetchDataFromServer();
-                }, 3000);
+                }, 1000);
 
 
 
