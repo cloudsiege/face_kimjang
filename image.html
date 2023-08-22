@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face Landmark Detection</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>얼굴 데이터 업로드</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -26,14 +27,30 @@
     </style>
 </head>
 <body>
-    <h1>Face Landmark Detection</h1>
-    <input type="file" id="imageInput" accept="image/*">
-    <div id="result"></div>
-    <img id="inputImage" src="" alt="Input Image">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <div class="container mt-5">
+        <h1 class="text-center">얼굴 데이터 업로드</h1>
+        <p class="text-center">사진은 저장되지 않습니다.</p>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <input type="text" class="form-control mb-2" id="nameInput" placeholder="이름">
+                <input type="text" class="form-control mb-2" id="affiliationInput" placeholder="소속">
+                <div class="custom-file mb-2">
+                    <input type="file" class="custom-file-input" id="imageInput" accept="image/*">
+                    <label class="custom-file-label" for="imageInput">이미지 선택</label>
+                </div>
+                <div id="result" class="text-center"></div>
+                <img id="inputImage" class="img-fluid mt-3" src="" alt="Input Image">
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="js/face-api.min.js"></script>
     <script>
         const imageInput = document.getElementById('imageInput');
+        const nameInput = document.getElementById('nameInput');
+        const affiliationInput = document.getElementById('affiliationInput');
         const resultDiv = document.getElementById('result');
         const inputImage = document.getElementById('inputImage');
 
@@ -54,14 +71,42 @@
                 if (detections.length > 0) {
                     resultDiv.innerHTML = '';
                     detections.forEach((detection, i) => {
-                        const landmarksText = JSON.stringify(detection.landmarks);
-                        const descriptor = detection.descriptor.join(',');
-                        resultDiv.innerHTML += `<p>Face ${i + 1} Landmarks: ${landmarksText}</p>`;
-                        resultDiv.innerHTML += `<p>Face ${i + 1} Descriptor: ${descriptor}</p>`;
+                        const descriptor = detection.descriptor;
+                        resultDiv.innerHTML += `<p>${i + 1}개의 얼굴이 감지되어 업로드가 되었습니다.</p>`;
+
+                        const name = nameInput.value;
+                        const affiliation = affiliationInput.value;
+                        sendDataToServer(name, affiliation, descriptor);
                     });
                 } else {
                     resultDiv.innerHTML = 'No faces detected.';
                 }
+            });
+        }
+
+        function sendDataToServer(name, affiliation, descriptor) {
+            // Implement your code to send data to the server here
+            // You can use AJAX, Fetch, or any other method to send a POST request with the collected data
+            // Example using Fetch API:
+            fetch('https://biqapp.com/api/v1/face/descriptors-save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    affiliation: affiliation,
+                    descriptors: descriptor,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response from the server if needed
+                console.log(data);
+            })
+            .catch(error => {
+                // Handle errors if any
+                console.error('Error sending data to server:', error);
             });
         }
     </script>
