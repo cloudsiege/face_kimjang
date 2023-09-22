@@ -6,6 +6,7 @@ let displaySize;
 let canvas; 
 let faceDetection; 
 let faceData = []; 
+let detectedFaces = [];
 let count = 0; 
 let imageDescriptors;
 /* 
@@ -17,6 +18,7 @@ displaySize: 화면에 표시할 웹캠 영상의 크기를 저장합니다.
 canvas: 얼굴 인식 결과를 그릴 캔버스 요소를 저장합니다.
 faceDetection: 얼굴 인식 작업을 주기적으로 실행하는 타이머를 저장합니다.
 faceData: 인식된 얼굴 데이터를 저장하는 배열입니다.
+detectedFaces: 이전에 인식된 얼굴 데이터를 저장하는 배열입니다.
 count: 서버로 전송된 얼굴 데이터의 개수를 저장하는 카운트 변수입니다.
 imageDescriptors: descriptors값을 저장하는 변수입니다.
 */
@@ -79,7 +81,6 @@ imageDescriptors: descriptors값을 저장하는 변수입니다.
     // 얼굴 감지가 활성화되는 경우
     toggleContrl("box-switch", true);
     toggleContrl("name-switch", true);
-    toggleContrl("landmarks-switch", true);
 
     // 박스, 이름, 랜드마크 스위치들을 기본 체크 상태로 설정
     $("#box-switch").prop('checked', true);
@@ -104,7 +105,6 @@ imageDescriptors: descriptors값을 저장하는 변수입니다.
     // 박스, 이름, 랜드마크 스위치들을 비활성화 상태로 설정
     toggleContrl("box-switch", false);
     toggleContrl("name-switch", false);
-    toggleContrl("landmarks-switch", false);
 
     // 캔버스 초기화
     if (typeof canvas !== "undefined") {
@@ -242,9 +242,6 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
     if ($("#box-switch").is(":checked")) {
       faceapi.draw.drawDetections(canvas, resizedDetections);
     }
-    if ($("#landmarks-switch").is(":checked")) {
-      faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-    }
 
     // 로딩 표시 요소를 숨깁니다.
     if (!$(".loading").hasClass('d-none')) {
@@ -320,6 +317,9 @@ $.getJSON('https://biqapp.com/api/v1/face/descriptors', function(jsonData) {
 
   // 오류 메시지 숨김
   $("#errorMsg").addClass("d-none");
+
+  // 이전에 인식된 얼굴 데이터 초기화
+  detectedFaces = [];
 
   // 카메라 플립 기능 비활성화
   $("#cameraFlip").addClass('d-none');
